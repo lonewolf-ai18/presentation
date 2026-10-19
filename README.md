@@ -1,8 +1,10 @@
-This repository features a curated collection of visually impressive presentations and brainstorming samples.
-Workflow:
-Initial Generation: Created using Gemini Notebook.
-Refinement: Manually processed and polished before uploading.
-Contents:
-.pptx files provided as read-only slide decks complete with speaker notes.
-Corresponding .png thumbnail images sharing the same filename.
-Presentations are optimized and compressed using SlideSpeak (https://slidespeak.co/free-tools/compress-powerpoint-tool) prior to upload.
+This repository features a curated collection of visually impressive presentations and brainstorming samples. 
+
+**Workflow:**
+* **Initial Generation:** Created using Gemini Notebook.
+* **Refinement:** Manually processed and polished before uploading.
+
+**Contents:**
+* `.pptx` files provided as read-only slide decks complete with speaker notes.
+* Corresponding `.png` thumbnail images sharing the same filename.
+* Presentations are optimized and compressed using [SlideSpeak](https://slidespeak.co/free-tools/compress-powerpoint-tool) prior to upload.
