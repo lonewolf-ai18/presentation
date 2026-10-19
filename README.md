@@ -1,5 +1,8 @@
-This repository is a place to share impressive looking presentation and provides samples for brain storming.
-
-Initial version is created using Gemini notebook, then further process before upload. Presentation are in MS powerpoint format in non-editiable deck plus speaker notes. There is also a thumbnail in .png format with same name.
-
-.PPTX File are compressed by SlideSpeak (https://slidespeak.co/free-tools/compress-powerpoint-tool) before upload.
+This repository features a curated collection of visually impressive presentations and brainstorming samples.
+Workflow:
+Initial Generation: Created using Gemini Notebook.
+Refinement: Manually processed and polished before uploading.
+Contents:
+.pptx files provided as read-only slide decks complete with speaker notes.
+Corresponding .png thumbnail images sharing the same filename.
+Presentations are optimized and compressed using SlideSpeak (https://slidespeak.co/free-tools/compress-powerpoint-tool) prior to upload.
