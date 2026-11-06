@@ -2,6 +2,7 @@ This repository features a curated collection of visually impressive presentatio
 
 **Workflow:**
 * **Initial Generation:** Created using Gemini Notebook.
+* Base prompt use to specify the layout: Use dark background with impactful, stunning imagery to complement the content, avoiding an artificial or AI-generated look & feel.
 * **Refinement:** Manually processed and polished before uploading.
 
 **Contents:**
