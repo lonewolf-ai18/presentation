@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Convert PNGs (and other raster images) to JPEG inside a .pptx file without breaking OOXML."""
+"""Compress raster images inside a .pptx file without breaking OOXML."""
 
 from __future__ import annotations
 
@@ -7,6 +7,7 @@ import argparse
 import tempfile
 import xml.etree.ElementTree as ET
 import zipfile
+from datetime import datetime
 from pathlib import Path
 from PIL import Image, ImageColor, ImageOps
 
@@ -97,6 +98,13 @@ def update_content_types(
         new_default.set("ContentType", "image/jpeg")
         existing_defaults["jpg"] = new_default
 
+    # Ensure png default content type exists if any .png is used
+    if "png" in used_extensions and "png" not in existing_defaults:
+        new_default = ET.SubElement(root, default_tag)
+        new_default.set("Extension", "png")
+        new_default.set("ContentType", "image/png")
+        existing_defaults["png"] = new_default
+
     # Update any Override pointing to the old part name (e.g. /ppt/media/image1.png)
     old_part_norm = old_rel_part if old_rel_part.startswith("/") else f"/{old_rel_part}"
     new_part_norm = new_rel_part if new_rel_part.startswith("/") else f"/{new_rel_part}"
@@ -107,6 +115,9 @@ def update_content_types(
             if new_part_norm.lower().endswith((".jpg", ".jpeg")):
                 elem.set("PartName", new_part_norm)
                 elem.set("ContentType", "image/jpeg")
+            elif new_part_norm.lower().endswith(".png"):
+                elem.set("PartName", new_part_norm)
+                elem.set("ContentType", "image/png")
             else:
                 root.remove(elem)
 
@@ -126,13 +137,31 @@ def compress_image_file(
     max_dim: int = 2000,
     jpeg_quality: int = 80,
     bg_color: tuple[int, int, int] = (255, 255, 255),
-) -> tuple[Path, int, int]:
-    """Compress a raster image in ppt/media and convert it to .jpg."""
+    keep_png: bool = False,
+) -> tuple[Path, int, int, str | None, str | None]:
+    """Compress a raster image in ppt/media; convert PNG to .jpg unless keep_png=True."""
     original_bytes = image_path.stat().st_size
     ext = image_path.suffix.lower()
 
     if ext in SKIP_EXTENSIONS or ext not in RASTER_EXTENSIONS:
-        return image_path, original_bytes, original_bytes
+        return image_path, original_bytes, original_bytes, None, None
+
+    if ext == ".png" and keep_png:
+        with Image.open(image_path) as raw_img:
+            img = ImageOps.exif_transpose(raw_img)
+            resized_img = resize_if_needed(img, max_dim=max_dim)
+            was_resized = resized_img.size != img.size
+
+            temp_png = media_dir / f".tmp_{image_path.name}"
+            resized_img.save(temp_png, format="PNG", optimize=True)
+
+        new_bytes = temp_png.stat().st_size
+        if was_resized or new_bytes < original_bytes:
+            temp_png.replace(image_path)
+            return image_path, original_bytes, new_bytes, None, None
+
+        temp_png.unlink(missing_ok=True)
+        return image_path, original_bytes, original_bytes, None, None
 
     with Image.open(image_path) as raw_img:
         img = ImageOps.exif_transpose(raw_img)
@@ -161,9 +190,6 @@ def compress_image_file(
     if new_bytes < original_bytes:
         return jpg_path, original_bytes, new_bytes, None, None
 
-    # Re-save original if re-encoding an existing .jpg made it larger
-    with Image.open(image_path) as _:
-        pass
     return image_path, original_bytes, original_bytes, None, None
 
 
@@ -176,21 +202,28 @@ def repack_zip(source_dir: Path, output_zip: Path) -> None:
                 zf.write(file_path, arcname)
 
 
+def default_output_path(input_path: Path, now: datetime | None = None) -> Path:
+    """Build default output path using _yymm suffix (e.g., _2611 for Nov 2026)."""
+    stamp = (now or datetime.now()).strftime("%y%m")
+    return input_path.with_name(f"{input_path.stem}_{stamp}{input_path.suffix}")
+
+
 def compress_pptx(
     input_path: Path,
     output_path: Path | None = None,
     max_dim: int = 2000,
     jpeg_quality: int = 80,
     bg_color: tuple[int, int, int] = (255, 255, 255),
+    keep_png: bool = False,
 ) -> Path:
-    """Extract a .pptx archive, convert raster images to .jpg, fix metadata, and repack."""
+    """Extract a .pptx archive, compress raster images, fix metadata, and repack."""
     if not input_path.exists() or not input_path.is_file():
         raise FileNotFoundError(f"Input file not found: {input_path}")
     if input_path.suffix.lower() != ".pptx":
         raise ValueError(f"Expected a .pptx file, got: {input_path.suffix}")
 
     if output_path is None:
-        output_path = input_path.with_name(f"{input_path.stem}_compressed.pptx")
+        output_path = default_output_path(input_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     with tempfile.TemporaryDirectory() as tmp_dir:
@@ -216,6 +249,7 @@ def compress_pptx(
                     max_dim=max_dim,
                     jpeg_quality=jpeg_quality,
                     bg_color=bg_color,
+                    keep_png=keep_png,
                 )
                 total_orig += orig_sz
                 total_new += new_sz
@@ -251,7 +285,7 @@ def compress_pptx(
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Convert raster images (including PNG) to JPG and compress inside a .pptx file."
+        description="Compress raster images inside a .pptx file (converting PNG to JPG by default)."
     )
     parser.add_argument("pptx_path", type=Path, help="Path to the input .pptx file")
     parser.add_argument(
@@ -259,7 +293,12 @@ def main() -> None:
         "--output",
         type=Path,
         default=None,
-        help="Path to the output .pptx file (default: <name>_compressed.pptx)",
+        help="Path to the output .pptx file (default: <name>_<yymm>.pptx)",
+    )
+    parser.add_argument(
+        "--keep-png",
+        action="store_true",
+        help="Do not convert PNG images to JPG (default: convert PNG to JPG)",
     )
     parser.add_argument(
         "--max-dim",
@@ -291,6 +330,7 @@ def main() -> None:
         max_dim=args.max_dim,
         jpeg_quality=args.quality,
         bg_color=rgb_bg,
+        keep_png=args.keep_png,
     )
 
 
