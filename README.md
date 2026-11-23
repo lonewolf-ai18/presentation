@@ -11,3 +11,9 @@ This repository features a curated collection of visually impressive presentatio
 * Decks can optimized and compressed using [SlideSpeak](https://slidespeak.co/free-tools/compress-powerpoint-tool) (as well as their offical command line version). Now using compress_pptx.py to do the compression prior upload.
 * To resuse the image, you can use [clipdrop](https://clipdrop.co/) to remove the text. 
 * For editable deck, create a `.pdf` version (or individual image) and convert the `.pdf`/image to editable `.pptx` using tools like [2pptx](https://2pptx.com/), [DeckEdit](https://deckedit.com/), [CopySlides](https://copyslides.com/), [Image2PPT](https://image2ppt.com/), [SlidesPilot](https://www.slidespilot.com/image-to-ppt), ...
+
+**About the utilities:**
+* `compress_pptx.py` compresses raster images inside a .pptx file while preserving OOXML relationships and content types. By default, it converts PNGs (and other raster images) to JPEGs, downscales images larger than --max-dim (default 2000px), and saves the output as <name>_<yymm>.pptx. Use --keep-png to retain PNG files and their transparency instead of converting them to JPG.
+Example:
+python compress_pptx.py slides.pptx
+python compress_pptx.py slides.pptx --keep-png --max-dim 1600 --quality 85 -o out/custom_deck.pptx
