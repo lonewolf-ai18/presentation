@@ -17,5 +17,5 @@ This repository features a curated collection of visually impressive presentatio
 Syntax:\
 python compress_pptx.py slides.pptx\
 python compress_pptx.py slides.pptx --keep-png --max-dim 1600 --quality 85 -o out/custom_deck.pptx
-* `pptx_catalog.py` create a single png which list the first 16 slides in thumbnail format.\
+* `pptx_catalog.py` creates a single png which list the first 16 slides in thumbnail format.\
 Syntax: python pptx_catalog.py slides.pptx
