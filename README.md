@@ -19,3 +19,7 @@ python compress_pptx.py slides.pptx\
 python compress_pptx.py slides.pptx --keep-png --max-dim 1600 --quality 85 -o out/custom_deck.pptx
 * `pptx_catalog.py` creates a single png which list the first 16 slides in thumbnail format.\
 Syntax: python pptx_catalog.py slides.pptx
+* `update_pptx_layout.py` updates the master template background to black, create a blank template for the slides and remove unused slide templates.\
+Syntax: python update_pptx_layout.py slides.pptx
+* `import_speaker_note.py` imports speaker note in word format into the corresponding powerpoint file; use `Slide #` as seperator for individual slide speaker note.\
+Syntax: python import_speaker_note.py slides.pptx
